@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { AspectRatioType } from '@/types';
 import AspectRatioToggle from './aspect-ratio-toggle';
 import { useToast } from '@/hooks/use-toast';
+import Image from 'next/image';
 
 interface CropToolProps {
     image: string;
@@ -174,11 +175,14 @@ export default function CropTool({
                     keepSelection={true}
                     ruleOfThirds={true}
                 >
-                    <img
+                    <Image
                         ref={imgRef}
                         src={image}
                         alt="Crop preview"
                         style={{ maxWidth: '100%' }}
+                        width={800}
+                        height={600}
+                        unoptimized
                     />
                 </ReactCrop>
             </div>
