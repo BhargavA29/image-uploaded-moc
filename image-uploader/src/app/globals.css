@@ -34,6 +34,7 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -66,7 +67,23 @@ body {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.ReactCrop {
+  display: inline-block !important;
+  max-width: 100% !important;
+}
+
+.ReactCrop__child-wrapper {
+  max-width: 100% !important;
+  width: auto !important;
+}
+
+.ReactCrop__crop-selection {
+  max-width: 100% !important;
+  max-height: 100% !important;
 }

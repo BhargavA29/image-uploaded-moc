@@ -103,7 +103,14 @@ export default function CropTool({
 
     const handleSave = async () => {
         try {
-            if (!imgRef.current || !crop) return;
+            if (!imgRef.current || !crop) {
+                toast({
+                    title: "Error",
+                    description: "No image or crop selection found.",
+                    variant: "destructive",
+                });
+                return;
+            }
 
             setIsLoading(true);
 
@@ -114,9 +121,13 @@ export default function CropTool({
             );
 
             // Convert canvas to blob
-            const blob = await new Promise<Blob>((resolve) => {
+            const blob = await new Promise<Blob>((resolve, reject) => {
                 cropData.toBlob((blob) => {
-                    resolve(blob!);
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error('Failed to create blob'));
+                    }
                 }, 'image/jpeg');
             });
 
@@ -132,7 +143,7 @@ export default function CropTool({
             });
 
             if (!response.ok) {
-                throw new Error('Upload failed');
+                throw new Error(`Upload failed: ${response.statusText}`);
             }
 
             const data = await response.json();
@@ -140,6 +151,8 @@ export default function CropTool({
             toast({
                 title: "Success!",
                 description: "Image uploaded and processed successfully.",
+                variant: "default",
+                duration: 3000,
             });
 
             // You can handle the response URLs here
@@ -148,9 +161,10 @@ export default function CropTool({
         } catch (error) {
             console.error('Save error:', error);
             toast({
-                title: "Error",
-                description: "Failed to process image. Please try again.",
+                title: "Upload Failed",
+                description: error instanceof Error ? error.message : "Failed to process image. Please try again.",
                 variant: "destructive",
+                duration: 4000,
             });
         } finally {
             setIsLoading(false);
@@ -164,27 +178,38 @@ export default function CropTool({
                 onChange={onAspectRatioChange}
             />
 
-            <div className="max-h-[600px] overflow-auto">
-                <ReactCrop
-                    crop={crop}
-                    onChange={(c) => setCrop(c)}
-                    aspect={getAspectRatioValue(aspectRatio)}
-                    minWidth={100}
-                    minHeight={100}
-                    circularCrop={false}
-                    keepSelection={true}
-                    ruleOfThirds={true}
-                >
-                    <Image
-                        ref={imgRef}
-                        src={image}
-                        alt="Crop preview"
-                        style={{ maxWidth: '100%' }}
-                        width={800}
-                        height={600}
-                        unoptimized
-                    />
-                </ReactCrop>
+            <div className="relative w-full h-[600px] overflow-hidden">
+                <div className="flex items-center justify-center w-full h-full">
+                    <ReactCrop
+                        crop={crop}
+                        onChange={(c) => setCrop(c)}
+                        aspect={getAspectRatioValue(aspectRatio)}
+                        minWidth={100}
+                        minHeight={100}
+                        circularCrop={false}
+                        keepSelection={true}
+                        ruleOfThirds={true}
+                        className="max-w-fit"
+                    >
+                        <Image
+                            ref={imgRef}
+                            src={image}
+                            alt="Crop preview"
+                            style={{
+                                maxWidth: '100%',
+                                maxHeight: '600px',
+                                width: 'auto',
+                                height: 'auto',
+                                objectFit: 'contain',
+                                display: 'block'
+                            }}
+                            width={800}
+                            height={600}
+                            unoptimized
+                            priority
+                        />
+                    </ReactCrop>
+                </div>
             </div>
 
             <div className="flex justify-end">
