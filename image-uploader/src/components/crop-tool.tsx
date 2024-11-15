@@ -8,6 +8,7 @@ import { AspectRatioType } from '@/types';
 import AspectRatioToggle from './aspect-ratio-toggle';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import LoadingOverlay from './ui/loading-overlay';
 
 interface CropToolProps {
     image: string;
@@ -189,7 +190,7 @@ export default function CropTool({
                         circularCrop={false}
                         keepSelection={true}
                         ruleOfThirds={true}
-                        className="max-w-fit"
+                        className="max-w-fit relative"
                     >
                         <Image
                             ref={imgRef}
@@ -208,6 +209,7 @@ export default function CropTool({
                             unoptimized
                             priority
                         />
+                        {isLoading && <LoadingOverlay />}
                     </ReactCrop>
                 </div>
             </div>
