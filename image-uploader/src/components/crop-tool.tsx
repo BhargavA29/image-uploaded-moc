@@ -9,6 +9,7 @@ import AspectRatioToggle from './aspect-ratio-toggle';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import LoadingOverlay from './ui/loading-overlay';
+import { isValidImageType } from '@/lib/utils';
 
 interface CropToolProps {
     image: string;
@@ -123,13 +124,22 @@ export default function CropTool({
 
             // Convert canvas to blob
             const blob = await new Promise<Blob>((resolve, reject) => {
+                // Get the original image type from the src URL
+                const imageType = imgRef.current?.src.split(';')[0].split(':')[1] || 'image/jpeg';
+
+                // Validate image type
+                if (!isValidImageType(imageType)) {
+                    reject(new Error('Invalid image type'));
+                    return;
+                }
+
                 cropData.toBlob((blob) => {
                     if (blob) {
                         resolve(blob);
                     } else {
                         reject(new Error('Failed to create blob'));
                     }
-                }, 'image/jpeg');
+                }, imageType); // Use original image type instead of hardcoding jpeg
             });
 
             // Create form data
