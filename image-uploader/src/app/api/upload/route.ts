@@ -23,41 +23,85 @@ export async function POST(request: Request) {
         const baseOptions = {
             folder: 'image-uploader',
             resource_type: 'image' as const,
+            quality: 90,
+            fetch_format: 'auto',
+            flags: 'preserve_transparency'
         };
 
-        // Upload original image
+        // Upload original image and get its dimensions
         const originalUpload = await cloudinary.uploader.upload(
             `data:image/png;base64,${buffer.toString('base64')}`,
             {
                 ...baseOptions,
-                quality: 100,
+                transformation: [
+                    { quality: 'auto:best' }
+                ]
             }
         );
 
-        // Upload 60% quality version
-        const quality60Upload = await cloudinary.uploader.upload(
+        const originalWidth = originalUpload.width;
+        const originalHeight = originalUpload.height;
+
+        // Calculate dimensions for 60% size
+        const width60 = Math.round(originalWidth * 0.6);
+        const height60 = Math.round(originalHeight * 0.6);
+
+        // Calculate dimensions for 30% size
+        const width30 = Math.round(originalWidth * 0.3);
+        const height30 = Math.round(originalHeight * 0.3);
+
+        // Upload 60% size version
+        const size60Upload = await cloudinary.uploader.upload(
             `data:image/png;base64,${buffer.toString('base64')}`,
             {
                 ...baseOptions,
-                quality: 60,
+                transformation: [
+                    {
+                        width: Math.round(originalWidth * 0.6),
+                        height: Math.round(originalHeight * 0.6),
+                        crop: 'scale',
+                        quality: 'auto:good'
+                    }
+                ]
             }
         );
 
-        // Upload 30% quality version
-        const quality30Upload = await cloudinary.uploader.upload(
+        // Upload 30% size version
+        const size30Upload = await cloudinary.uploader.upload(
             `data:image/png;base64,${buffer.toString('base64')}`,
             {
                 ...baseOptions,
-                quality: 30,
+                transformation: [
+                    {
+                        width: Math.round(originalWidth * 0.3),
+                        height: Math.round(originalHeight * 0.3),
+                        crop: 'scale',
+                        quality: 'auto:eco'
+                    }
+                ]
             }
         );
 
-        // Connect to MongoDB and save the image data
+        // Connect to MongoDB and save the image data with dimensions
         const db = await connectToDb();
         const result = await db.collection('images').insertOne({
             originalUrl: originalUpload.secure_url,
-            compressedUrl60: quality60Upload.secure_url,
-            compressedUrl30: quality30Upload.secure_url,
+            compressedUrl60: size60Upload.secure_url,
+            compressedUrl30: size30Upload.secure_url,
+            dimensions: {
+                original: {
+                    width: originalWidth,
+                    height: originalHeight
+                },
+                size60: {
+                    width: width60,
+                    height: height60
+                },
+                size30: {
+                    width: width30,
+                    height: height30
+                }
+            },
             aspectRatio,
             createdAt: new Date()
         });
@@ -65,8 +109,22 @@ export async function POST(request: Request) {
         return NextResponse.json({
             _id: result.insertedId,
             originalUrl: originalUpload.secure_url,
-            compressedUrl60: quality60Upload.secure_url,
-            compressedUrl30: quality30Upload.secure_url,
+            compressedUrl60: size60Upload.secure_url,
+            compressedUrl30: size30Upload.secure_url,
+            dimensions: {
+                original: {
+                    width: originalWidth,
+                    height: originalHeight
+                },
+                size60: {
+                    width: width60,
+                    height: height60
+                },
+                size30: {
+                    width: width30,
+                    height: height30
+                }
+            },
             aspectRatio,
         });
 

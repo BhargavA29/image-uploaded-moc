@@ -1,7 +1,18 @@
+export interface ImageDimensions {
+    width: number;
+    height: number;
+}
+
 export interface UploadedImage {
+    _id: string;
     originalUrl: string;
-    compressedUrl30: string;
     compressedUrl60: string;
+    compressedUrl30: string;
+    dimensions: {
+        original: ImageDimensions;
+        size60: ImageDimensions;
+        size30: ImageDimensions;
+    };
     aspectRatio: string;
     createdAt: Date;
 }

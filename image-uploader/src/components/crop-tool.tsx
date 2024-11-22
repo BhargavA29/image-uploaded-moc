@@ -15,6 +15,7 @@ interface CropToolProps {
     image: string;
     aspectRatio: AspectRatioType;
     onAspectRatioChange: (ratio: AspectRatioType) => void;
+    onReset: () => void;
 }
 
 function getImageData(image: HTMLImageElement, crop: PixelCrop) {
@@ -27,8 +28,8 @@ function getImageData(image: HTMLImageElement, crop: PixelCrop) {
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
 
-    canvas.width = crop.width;
-    canvas.height = crop.height;
+    canvas.width = crop.width * scaleX;
+    canvas.height = crop.height * scaleY;
 
     ctx.drawImage(
         image,
@@ -38,8 +39,8 @@ function getImageData(image: HTMLImageElement, crop: PixelCrop) {
         crop.height * scaleY,
         0,
         0,
-        crop.width,
-        crop.height
+        crop.width * scaleX,
+        crop.height * scaleY
     );
 
     return canvas;
@@ -48,7 +49,8 @@ function getImageData(image: HTMLImageElement, crop: PixelCrop) {
 export default function CropTool({
     image,
     aspectRatio,
-    onAspectRatioChange
+    onAspectRatioChange,
+    onReset
 }: CropToolProps) {
     const getAspectRatioValue = (ratio: AspectRatioType) => {
         switch (ratio) {
@@ -157,7 +159,7 @@ export default function CropTool({
                 throw new Error(`Upload failed: ${response.statusText}`);
             }
 
-            const data = await response.json();
+            await response.json();
 
             toast({
                 title: "Success!",
@@ -166,14 +168,14 @@ export default function CropTool({
                 duration: 3000,
             });
 
-            // You can handle the response URLs here
-            console.log('Upload successful:', data);
+            // Reset the upload form
+            onReset();
 
-        } catch (error) {
-            console.error('Save error:', error);
+        } catch (err) {
+            console.error('Save error:', err);
             toast({
                 title: "Upload Failed",
-                description: error instanceof Error ? error.message : "Failed to process image. Please try again.",
+                description: err instanceof Error ? err.message : "Failed to process image. Please try again.",
                 variant: "destructive",
                 duration: 4000,
             });
@@ -218,13 +220,21 @@ export default function CropTool({
                             height={600}
                             unoptimized
                             priority
+                            loading="eager"
                         />
                         {isLoading && <LoadingOverlay />}
                     </ReactCrop>
                 </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end space-x-4">
+                <Button
+                    variant="outline"
+                    onClick={onReset}
+                    disabled={isLoading}
+                >
+                    Reset Image
+                </Button>
                 <Button onClick={handleSave} disabled={isLoading}>
                     {isLoading ? 'Processing...' : 'Save Image'}
                 </Button>
